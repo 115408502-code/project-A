@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "default": "project-a-ad8a4"
+  },
+  "targets": {
+    "project-a-ad8a4": {
+      "hosting": {
+        "project-a-ad8a4-687db": ["project-a-ad8a4-687db"]
+      }
+    }
+  }
+}

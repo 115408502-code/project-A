@@ -3,10 +3,13 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRe
 
 const CONFIG_KEY = "taskflow-firebase-config-v1";
 const DEFAULT_CONFIG = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_FIREBASE_APP_ID"
+  apiKey: "AIzaSyDZtNaAleeNvDEEF9gjXlyNanqX1y8C-fc",
+  authDomain: "project-a-ad8a4.firebaseapp.com",
+  projectId: "project-a-ad8a4",
+  storageBucket: "project-a-ad8a4.firebasestorage.app",
+  messagingSenderId: "942536359200",
+  appId: "1:942536359200:web:235f08c1cff3d09cf96b45",
+  measurementId: "G-BPR5S2RCKE"
 };
 const root = document.documentElement;
 let app = null;
