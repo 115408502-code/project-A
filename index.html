@@ -16,10 +16,10 @@
   </nav>
   <div class="side-section-head"><span>我的專案</span><button class="icon-btn tiny" id="addProjectBtn" aria-label="新增專案" title="新增專案">＋</button></div>
   <div class="project-nav" id="projectNav"></div>
-  <div class="sidebar-bottom"><div class="storage-note"><span class="storage-icon">◈</span><div><b>資料儲存在此裝置</b><small>僅你可存取此瀏覽器資料</small></div></div><div class="profile"><div class="profile-avatar">沛</div><div class="profile-copy"><b>沛欣</b><small>個人方案</small></div><button class="icon-btn tiny" title="帳戶選項">···</button></div></div>
+  <div class="sidebar-bottom"><div class="storage-note"><span class="storage-icon">◈</span><div><b>資料儲存在此裝置</b><small>僅你可存取此瀏覽器資料</small></div></div><button class="nav-link settings-link" id="settingsBtn"><span class="nav-icon">⚙</span>偏好設定</button><div class="profile"><div class="profile-avatar">沛</div><div class="profile-copy"><b>沛欣</b><small>個人方案</small></div><button class="icon-btn tiny" title="帳戶選項">···</button></div></div>
 </aside>
 <main class="main-content">
-<header class="topbar"><div class="breadcrumb"><span>工作區</span><span class="crumb-sep">/</span><b id="crumbTitle">總覽</b></div><div class="top-actions"><button class="search-trigger" id="searchTrigger"><span>⌕</span><span>搜尋任務或專案...</span><kbd>⌘ K</kbd></button><div class="top-avatar">沛</div></div></header>
+<header class="topbar"><div class="breadcrumb"><span>工作區</span><span class="crumb-sep">/</span><b id="crumbTitle">總覽</b></div><div class="top-actions"><button class="search-trigger" id="searchTrigger"><span>⌕</span><span>搜尋任務或專案...</span><kbd>Ctrl K</kbd></button><button class="icon-btn notification-btn" id="notifyBtn" aria-label="到期提醒" title="到期提醒">♧<i></i></button><div class="top-avatar">沛</div></div></header>
 <div class="page-wrap">
 <section class="greeting-row"><div><div class="eyebrow" id="currentDate">星期一，10月 30日</div><h1 id="pageHeading">早安，沛欣 <span class="wave">✦</span></h1><p class="subtitle" id="pageSubtitle">今天也為重要的事，留一點專注時間。</p></div><button class="primary-btn" id="newTaskBtn"><span>＋</span> 新增任務</button></section>
 <section class="stats-grid" id="statsGrid"></section>
@@ -41,15 +41,3 @@
 <div class="toast" id="toast" role="status"></div><div class="modal-backdrop" id="modalBackdrop"><section class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
 <script src="app.js"></script>
 </body></html>
-
-
-
-
-
-
-
-
-
-
-
-
