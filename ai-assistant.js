@@ -74,6 +74,28 @@ async function initAI() {
   return model;
 }
 
+async function streamReply(targetChat, request, node, firstChunkTimeoutMs = 15000) {
+  const deadline = Date.now() + firstChunkTimeoutMs;
+  const untilDeadline = promise => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Object.assign(new Error("Model did not start streaming"), { code: "taskflow/primary-timeout" })), Math.max(1, deadline - Date.now()));
+    Promise.resolve(promise).then(value => { clearTimeout(timer); resolve(value); }, error => { clearTimeout(timer); reject(error); });
+  });
+  const result = await untilDeadline(targetChat.sendMessageStream(request));
+  const iterator = result.stream[Symbol.asyncIterator]();
+  const first = await untilDeadline(iterator.next());
+  let fullText = "";
+  const append = chunk => {
+    const text = chunk?.text?.() || "";
+    if (!text) return;
+    fullText += text;
+    node.textContent = fullText;
+    messages.scrollTop = messages.scrollHeight;
+  };
+  if (!first.done) append(first.value);
+  for await (const chunk of { [Symbol.asyncIterator]: () => iterator }) append(chunk);
+  return fullText;
+}
+
 async function send(text) {
   const prompt = text.trim();
   if (!prompt || busy) return;
@@ -81,37 +103,35 @@ async function send(text) {
   busy = true;
   sendButton.disabled = true;
   input.disabled = true;
-  const pending = addMessage("正在整理你的任務與行程…");
+  const pending = addMessage("正在連線，AI 會逐段顯示規劃…");
   try {
     await initAI();
     const request = `以下是目前工作區未完成任務及未來七天行程（僅用來回答本次規劃，不要假設已變更資料）：\n${getAgendaContext()}\n\n使用者問題：${prompt}`;
     const result = await Promise.race([
       (async () => {
         try {
-          return await Promise.race([
-            chat.sendMessage(request),
-            new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("Primary model timed out"), { code: "taskflow/primary-timeout" })), 15000))
-          ]);
+          return await streamReply(chat, request, pending);
         } catch (error) {
           const status = Number(error?.customData?.httpStatus || error?.status || 0);
           const message = String(error?.message || "");
           const transient = [429, 500, 502, 503, 504].includes(status) || /\[(429|500|502|503|504)\s*\]/.test(message);
           if (!transient && error?.code !== "taskflow/primary-timeout") throw error;
+          pending.textContent = "主模型較忙，正在切換備援並逐段回覆…";
           const fallback = aiApi.getGenerativeModel(aiService, {
             model: BACKUP_MODEL,
             systemInstruction: SYSTEM_INSTRUCTION,
             generationConfig: { maxOutputTokens: QUICK_REPLY_CONFIG.maxOutputTokens }
           });
           const fallbackChat = fallback.startChat();
-          const fallbackResult = await fallbackChat.sendMessage(request);
+          const fallbackResult = await streamReply(fallbackChat, request, pending, 30000);
           model = fallback;
           chat = fallbackChat;
           return fallbackResult;
         }
       })(),
-      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 50000))
+      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 45000))
     ]);
-    pending.textContent = result.response.text() || "目前沒有可顯示的建議，請換個方式詢問。";
+    if (!result) pending.textContent = "目前沒有可顯示的建議，請換個方式詢問。";
   } catch (error) {
     console.error("Firebase AI Logic request failed", error);
     const code = error?.code || "";
