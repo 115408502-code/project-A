@@ -2,7 +2,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const CONFIG_KEY = "taskflow-firebase-config-v1";
-const LEGACY_PROJECT_ID = "project-a-ad8a4";
 const DEFAULT_CONFIG = {
   apiKey: "AIzaSyA_7UuCMWcOlxcZ2cUKwmm3eywm8Ov88Jc",
   authDomain: "project-a-59416.firebaseapp.com",
@@ -24,7 +23,7 @@ let appCheckNeeded = false;
 const readConfig = () => {
   try {
     const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}");
-    if (saved.projectId === LEGACY_PROJECT_ID) {
+    if (saved.projectId !== DEFAULT_CONFIG.projectId || saved.appId !== DEFAULT_CONFIG.appId || saved.apiKey !== DEFAULT_CONFIG.apiKey) {
       localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
       return { ...DEFAULT_CONFIG };
     }
