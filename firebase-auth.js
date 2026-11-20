@@ -1,4 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const CONFIG_KEY = "taskflow-firebase-config-v1";
@@ -11,6 +12,7 @@ const DEFAULT_CONFIG = {
   appId: "1:205844933791:web:0b9b7715865bec9e1e86aa",
   measurementId: "G-K6J6PED4HK"
 };
+const APP_CHECK_SITE_KEY = "6LeZESouAAAAAHatc97g1kl335rrjMDZwW2SkeZv";
 const root = document.documentElement;
 let app = null;
 let auth = null;
@@ -83,6 +85,10 @@ async function ensureFirebase() {
   const key = JSON.stringify(config);
   if (auth && initializedConfig === key) return auth;
   app = initializeApp(config, `taskflow-${Date.now()}`);
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+    isTokenAutoRefreshEnabled: true
+  });
   auth = getAuth(app);
   provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
