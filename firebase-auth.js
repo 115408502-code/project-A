@@ -1,5 +1,4 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const CONFIG_KEY = "taskflow-firebase-config-v1";
@@ -21,6 +20,7 @@ let currentUser = null;
 let authError = "";
 let initializedConfig = "";
 let appCheckNeeded = false;
+let appCheckInitPromise;
 
 const readConfig = () => {
   try {
@@ -85,10 +85,19 @@ async function ensureFirebase() {
   const key = JSON.stringify(config);
   if (auth && initializedConfig === key) return auth;
   app = initializeApp(config, "taskflow-project-a-59416");
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
-    isTokenAutoRefreshEnabled: true
-  });
+  appCheckInitPromise ||= import("https://www.gstatic.com/firebasejs/12.9.0/firebase-app-check.js")
+    .then(({ initializeAppCheck, ReCaptchaEnterpriseProvider }) => {
+      initializeAppCheck(app, {
+        provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
+        isTokenAutoRefreshEnabled: true
+      });
+      appCheckNeeded = false;
+    })
+    .catch(error => {
+      appCheckNeeded = true;
+      console.error("Firebase App Check initialization failed", error);
+    });
+  await appCheckInitPromise;
   auth = getAuth(app);
   provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
