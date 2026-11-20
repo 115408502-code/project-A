@@ -5,13 +5,18 @@
   "targets": {
     "project-a-ad8a4": {
       "hosting": {
-        "project-a-ad8a4-687db": ["project-a-ad8a4-687db"]
+        "project-a-ad8a4-687db": [
+          "project-a-ad8a4-687db"
+        ]
       }
     },
     "project-a-59416": {
       "hosting": {
-        "project-a-59416": ["project-a-59416"]
+        "project-a-59416": [
+          "project-a-59416"
+        ]
       }
     }
-  }
+  },
+  "etags": {}
 }

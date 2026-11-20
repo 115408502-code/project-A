@@ -49,7 +49,7 @@ function renderAuthDialog(error = authError) {
       ${error ? `<p class="auth-error">${escapeHtml(error)}</p>` : ""}
       <div class="auth-divider">安全驗證</div>
       ${!isConfigured(config) ? `<p class="auth-config-note">尚未設定 Firebase。請到 Firebase Console 建立 Web App、啟用 Authentication 的 Google 提供者，將 Web App 設定填入 Firebase Console 的 Project settings → Your apps → SDK setup and configuration；此示範會從 firebase-auth.js 同目錄的 firebase-config.json 載入設定。</p>` : ""}
-      <div class="modal-actions"><span class="auth-disclaimer">登入後任務仍儲存在此瀏覽器；跨裝置同步需另接 Firestore。</span><div class="modal-actions-right"><button class="cancel-btn" id="authCancel">取消</button></div></div>`}`;
+      <div class="modal-actions"><span class="auth-disclaimer">登入後，任務與行程會同步到 Firebase Firestore。</span><div class="modal-actions-right"><button class="cancel-btn" id="authCancel">取消</button></div></div>`}`;
   backdrop.classList.add("open");
   modal.querySelector("#authClose")?.addEventListener("click", closeAuthDialog);
   modal.querySelector("#authCancel")?.addEventListener("click", closeAuthDialog);
@@ -135,6 +135,7 @@ window.taskflowAuth = {
   open: () => renderAuthDialog(""),
   signOut: async () => { if (!auth) return; await signOut(auth); },
   getCurrentUser: () => currentUser ? publicUser(currentUser) : null,
+  getFirebaseApp: () => app,
   configure: async config => {
     if (!config || !isConfigured(config)) throw new Error("需要完整的 Firebase Web App 設定。");
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
@@ -145,6 +146,10 @@ window.taskflowAuth = {
 };
 window.dispatchEvent(new CustomEvent("taskflow:auth-ready"));
 document.addEventListener("DOMContentLoaded", () => {
+  void ensureFirebase().catch(error => {
+    authError = error?.code === "taskflow/config-missing" ? "" : describeError(error);
+    emit("auth-error", { message: authError });
+  });
   document.querySelector("#authActionBtn")?.addEventListener("click", async () => {
     try { await ensureFirebase(); renderAuthDialog(""); }
     catch (error) { renderAuthDialog(error?.code === "taskflow/config-missing" ? "" : describeError(error)); }

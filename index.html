@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f6f7fb">
-<title>Taskflow — 專案工作台</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css?v=931513b">
+<title>Taskflow — 專案工作台</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css?v=ai-assistant-20261120-1">
 </head>
 <body>
 <div class="app-shell">
@@ -17,7 +17,7 @@
   </nav>
   <div class="side-section-head"><span>我的專案</span><button class="icon-btn tiny" id="addProjectBtn" aria-label="新增專案" title="新增專案">＋</button></div>
   <div class="project-nav" id="projectNav"></div>
-  <div class="sidebar-bottom"><div class="storage-note"><span class="storage-icon">◈</span><div><b>資料儲存在此裝置</b><small>僅你可存取此瀏覽器資料</small></div></div><button class="nav-link settings-link" id="settingsBtn"><span class="nav-icon">⚙</span>偏好設定</button><div class="profile"><div class="profile-avatar" id="profileAvatar">沛</div><div class="profile-copy"><b id="profileName">沛欣</b><small id="accountStatus">尚未登入</small></div><button class="auth-action" id="authActionBtn">Google 登入</button></div></div>
+  <div class="sidebar-bottom"><div class="storage-note"><span class="storage-icon">◈</span><div><b>尚未登入</b><small>登入後同步到 Firebase</small></div></div><button class="nav-link settings-link" id="settingsBtn"><span class="nav-icon">⚙</span>偏好設定</button><div class="profile"><div class="profile-avatar" id="profileAvatar">沛</div><div class="profile-copy"><b id="profileName">沛欣</b><small id="accountStatus">尚未登入</small></div><button class="auth-action" id="authActionBtn">Google 登入</button></div></div>
 </aside>
 <main class="main-content">
 <header class="topbar"><div class="breadcrumb"><span>工作區</span><span class="crumb-sep">/</span><b id="crumbTitle">總覽</b></div><div class="top-actions"><button class="search-trigger" id="searchTrigger"><span>⌕</span><span>搜尋任務或專案...</span><kbd>Ctrl K</kbd></button><button class="icon-btn notification-btn" id="notifyBtn" aria-label="到期提醒" title="到期提醒">♧<i></i></button><div class="auth-user-chip" id="authUserChip" hidden></div><div class="top-avatar" id="topAvatar">沛</div></div></header>
@@ -48,5 +48,13 @@
 <footer class="app-footer"><span>Taskflow <span class="footer-dot">·</span> 專注每一個下一步</span><span>資料自動儲存於此瀏覽器</span></footer>
 </div></main></div>
 <div class="toast" id="toast" role="status"></div><div class="modal-backdrop" id="authBackdrop"><section class="modal auth-panel" id="authModal" role="dialog" aria-modal="true"></section></div><div class="modal-backdrop" id="modalBackdrop"><section class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
-<script type="module" src="firebase-auth.js?v=google-auth-20261120-fix2"></script><script src="app.js?v=931513b"></script>
+<button class="ai-assistant-fab" id="aiAssistantToggle" type="button" aria-label="開啟 AI 行程助理" aria-expanded="false"><span class="ai-assistant-fab-icon">✦</span><span>AI 行程助理</span></button>
+<section class="ai-assistant-window" id="aiAssistantWindow" aria-label="AI 行程助理" hidden>
+  <header class="ai-assistant-header"><div class="ai-assistant-heading"><span class="ai-assistant-mark">✦</span><div><b>AI 行程助理</b><small>依你的任務與行程提供建議</small></div></div><button type="button" class="ai-assistant-close" id="aiAssistantClose" aria-label="收合 AI 行程助理">×</button></header>
+  <div class="ai-assistant-messages" id="aiAssistantMessages" aria-live="polite"><div class="ai-message assistant">嗨！我可以根據你的任務與行程，協助安排今天、找出空檔或排定優先順序。</div></div>
+  <div class="ai-assistant-prompts" id="aiAssistantPrompts"><button type="button" data-ai-prompt="根據我的任務和行程，幫我安排今天的計畫。">安排今天</button><button type="button" data-ai-prompt="查看未來七天，建議我怎麼分配任務與行程。">規劃本週</button></div>
+  <form class="ai-assistant-form" id="aiAssistantForm"><textarea id="aiAssistantInput" rows="1" maxlength="1000" placeholder="問我行程或任務安排…" aria-label="輸入行程問題" required></textarea><button type="submit" id="aiAssistantSend" aria-label="送出訊息">↑</button></form>
+  <div class="ai-assistant-footnote">AI 建議可能不完全正確；請自行確認時間安排。</div>
+</section>
+<script type="module" src="firebase-auth.js?v=workspace-sync-20261120-1"></script><script src="app.js?v=workspace-sync-20261120-1"></script><script type="module" src="firebase-sync.js?v=cloud-sync-20261120-1"></script><script type="module" src="ai-assistant.js?v=floating-ai-20261120-1"></script>
 </body></html>

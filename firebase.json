@@ -14,12 +14,28 @@
     "headers": [
       {
         "source": "**/*.js",
-        "headers": [{ "key": "Cache-Control", "value": "public,max-age=300" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=300"
+          }
+        ]
       },
       {
         "source": "**/*.css",
-        "headers": [{ "key": "Cache-Control", "value": "public,max-age=300" }]
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public,max-age=300"
+          }
+        ]
       }
     ]
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "asia-east1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }
