@@ -84,7 +84,7 @@ async function ensureFirebase() {
   if (!isConfigured(config)) throw Object.assign(new Error("Firebase config missing"), { code: "taskflow/config-missing" });
   const key = JSON.stringify(config);
   if (auth && initializedConfig === key) return auth;
-  app = initializeApp(config, `taskflow-${Date.now()}`);
+  app = initializeApp(config, "taskflow-project-a-59416");
   initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY),
     isTokenAutoRefreshEnabled: true
