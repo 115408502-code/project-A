@@ -10,6 +10,19 @@ let model;
 let chat;
 let busy = false;
 
+async function waitForSignedInFirebase(timeoutMs = 15000) {
+  const ready = () => window.taskflowAuth?.getCurrentUser?.() && window.taskflowAuth?.getFirebaseApp?.();
+  if (ready()) return { user: ready(), app: window.taskflowAuth.getFirebaseApp() };
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 250));
+    const user = window.taskflowAuth?.getCurrentUser?.();
+    const app = window.taskflowAuth?.getFirebaseApp?.();
+    if (user && app) return { user, app };
+  }
+  throw new Error("登入狀態尚未就緒。請重新整理頁面後再試。");
+}
+
 function addMessage(text, role = "assistant") {
   const node = document.createElement("div");
   node.className = `ai-message ${role}`;
@@ -37,9 +50,7 @@ function getAgendaContext() {
 
 async function initAI() {
   if (model) return model;
-  const user = window.taskflowAuth?.getCurrentUser?.();
-  const app = window.taskflowAuth?.getFirebaseApp?.();
-  if (!user || !app) throw new Error("請先使用 Google 登入，再使用 AI 行程助理。");
+  const { app } = await waitForSignedInFirebase();
   aiApi ||= await import(AI_SDK);
   const ai = aiApi.getAI(app, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true });
   model = aiApi.getGenerativeModel(ai, {
@@ -53,10 +64,6 @@ async function initAI() {
 async function send(text) {
   const prompt = text.trim();
   if (!prompt || busy) return;
-  if (!window.taskflowAuth?.getCurrentUser?.()) {
-    addMessage("請先按左側「Google 登入」，登入後就能使用 AI 行程助理。");
-    return;
-  }
   addMessage(prompt, "user");
   busy = true;
   sendButton.disabled = true;
@@ -64,14 +71,21 @@ async function send(text) {
   const pending = addMessage("正在整理你的任務與行程…");
   try {
     await initAI();
-    const result = await chat.sendMessage(`以下是目前工作區未完成任務及未來七天行程（僅用來回答本次規劃，不要假設已變更資料）：\n${getAgendaContext()}\n\n使用者問題：${prompt}`);
+    const result = await Promise.race([
+      chat.sendMessage(`以下是目前工作區未完成任務及未來七天行程（僅用來回答本次規劃，不要假設已變更資料）：\n${getAgendaContext()}\n\n使用者問題：${prompt}`),
+      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 30000))
+    ]);
     pending.textContent = result.response.text() || "目前沒有可顯示的建議，請換個方式詢問。";
   } catch (error) {
     console.error("Firebase AI Logic request failed", error);
     const code = error?.code || "";
-    pending.textContent = code.includes("app-check") || code.includes("appCheck")
-      ? "AI 安全驗證尚未設定完成，管理員需在 Firebase App Check 啟用此網站後再試。"
-      : "目前無法連線 AI 助理。請確認 Firebase AI Logic 已啟用、條款已接受，且已完成 App Check 設定。";
+    pending.textContent = code === "taskflow/ai-timeout"
+      ? "AI 回覆逾時，請稍後再試。若持續發生，請管理員完成 Firebase App Check 設定。"
+      : code.includes("app-check") || code.includes("appCheck") || code.includes("app check")
+        ? "Firebase App Check 尚未設定完成，AI 請求因此遭到阻擋。"
+        : code === "taskflow/auth-not-ready"
+          ? "登入狀態還沒準備好，請重新整理頁面後再試。"
+          : "AI 連線失敗。請確認 Firebase AI Logic 與 App Check 設定；稍後再試一次。";
   } finally {
     busy = false;
     sendButton.disabled = false;
