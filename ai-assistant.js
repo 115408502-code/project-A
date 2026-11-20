@@ -79,13 +79,17 @@ async function send(text) {
   } catch (error) {
     console.error("Firebase AI Logic request failed", error);
     const code = error?.code || "";
+    const detail = String(error?.message || error?.name || "未知錯誤")
+      .replace(/AIza[\w-]{20,}/g, "[已隱藏]")
+      .replace(/https?:\/\/\S+/g, "[服務端點]")
+      .slice(0, 180);
     pending.textContent = code === "taskflow/ai-timeout"
       ? "AI 回覆逾時，請稍後再試。若持續發生，請管理員完成 Firebase App Check 設定。"
       : code.includes("app-check") || code.includes("appCheck") || code.includes("app check")
         ? "Firebase App Check 尚未設定完成，AI 請求因此遭到阻擋。"
         : code === "taskflow/auth-not-ready"
           ? "登入狀態還沒準備好，請重新整理頁面後再試。"
-          : "AI 連線失敗。請確認 Firebase AI Logic 與 App Check 設定；稍後再試一次。";
+          : `AI 連線失敗${code ? `（${code}）` : ""}：${detail}`;
   } finally {
     busy = false;
     sendButton.disabled = false;
