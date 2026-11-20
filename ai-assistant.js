@@ -5,7 +5,7 @@ const QUICK_REPLY_CONFIG = {
   maxOutputTokens: 500,
   thinkingConfig: { thinkingLevel: "MINIMAL" }
 };
-const SYSTEM_INSTRUCTION = "你是 Taskflow 的繁體中文 AI 行程助理。以輸入資料的 today 日期和 Asia/Taipei 時區為準，不要推算或猜星期。只根據列出的任務與行程提供安排；沒有固定行程時，標明時段是假設。回覆以繁體中文簡短列出優先順序和可執行安排，最多 5 點；不要聲稱已修改資料。";
+const SYSTEM_INSTRUCTION = "你是 Taskflow 的繁體中文 AI 行程助理。以資料中的 today、dueLabel 和 Asia/Taipei 時區為準，不要自行推算星期或相對日期。只根據列出的任務與行程提供安排；沒有固定行程時，標明時段是假設。回覆以繁體中文簡短列出優先順序和可執行安排，最多 5 點；不要聲稱已修改資料。";
 const toggle = document.querySelector("#aiAssistantToggle");
 const panel = document.querySelector("#aiAssistantWindow");
 const form = document.querySelector("#aiAssistantForm");
@@ -49,7 +49,11 @@ function getAgendaContext() {
   const projects = new Map((state.projects || []).map(item => [item.id, item.name]));
   const tasks = (state.tasks || []).filter(item => !item.completed && (!item.due || item.due <= until))
     .sort((a, b) => (a.due || "9999").localeCompare(b.due || "9999"))
-    .map(item => ({ task: item.title, due: item.due || "未設定", project: projects.get(item.projectId) || "未分類", priority: item.priority || "未設定" }));
+    .map(item => {
+      const days = item.due ? Math.round((Date.parse(`${item.due}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86400000) : null;
+      const dueLabel = days === null ? "未設定" : days < 0 ? `已逾期${Math.abs(days)}天` : days === 0 ? "今天" : days === 1 ? "明天" : `${days}天後`;
+      return { task: item.title, due: item.due || "未設定", dueLabel, project: projects.get(item.projectId) || "未分類", priority: item.priority || "未設定" };
+    });
   const schedules = (state.schedules || []).filter(item => item.date >= today && item.date <= until)
     .sort((a, b) => `${a.date} ${a.startTime || ""}`.localeCompare(`${b.date} ${b.startTime || ""}`))
     .map(item => ({ event: item.title, date: item.date, start: item.startTime || "", end: item.endTime || "" }));
