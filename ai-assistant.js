@@ -1,6 +1,11 @@
 const AI_SDK = "https://www.gstatic.com/firebasejs/12.9.0/firebase-ai.js";
-const PRIMARY_MODEL = "gemini-3.8-flash";
-const BACKUP_MODEL = "gemini-3.5-flash-lite";
+const PRIMARY_MODEL = "gemini-3.5-flash-lite";
+const BACKUP_MODEL = "gemini-3.8-flash";
+const QUICK_REPLY_CONFIG = {
+  maxOutputTokens: 500,
+  thinkingConfig: { thinkingLevel: "MINIMAL" }
+};
+const SYSTEM_INSTRUCTION = "你是 Taskflow 的繁體中文 AI 行程助理。以輸入資料的 today 日期和 Asia/Taipei 時區為準，不要推算或猜星期。只根據列出的任務與行程提供安排；沒有固定行程時，標明時段是假設。回覆以繁體中文簡短列出優先順序和可執行安排，最多 5 點；不要聲稱已修改資料。";
 const toggle = document.querySelector("#aiAssistantToggle");
 const panel = document.querySelector("#aiAssistantWindow");
 const form = document.querySelector("#aiAssistantForm");
@@ -58,7 +63,8 @@ async function initAI() {
   aiService = aiApi.getAI(app, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true });
   model = aiApi.getGenerativeModel(aiService, {
     model: PRIMARY_MODEL,
-    systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
+    systemInstruction: SYSTEM_INSTRUCTION,
+    generationConfig: QUICK_REPLY_CONFIG
   });
   chat = model.startChat();
   return model;
@@ -89,7 +95,8 @@ async function send(text) {
           if (!transient && error?.code !== "taskflow/primary-timeout") throw error;
           const fallback = aiApi.getGenerativeModel(aiService, {
             model: BACKUP_MODEL,
-            systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
+            systemInstruction: SYSTEM_INSTRUCTION,
+            generationConfig: { maxOutputTokens: QUICK_REPLY_CONFIG.maxOutputTokens }
           });
           const fallbackChat = fallback.startChat();
           const fallbackResult = await fallbackChat.sendMessage(request);
