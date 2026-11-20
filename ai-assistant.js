@@ -96,6 +96,20 @@ async function streamReply(targetChat, request, node, firstChunkTimeoutMs = 1500
   return fullText;
 }
 
+function isStreamParseFailure(error) {
+  return /parse-failed/i.test(`${error?.code || ""} ${error?.message || ""}`);
+}
+
+async function completeReply(targetModel, request, node) {
+  const retryChat = targetModel.startChat();
+  const result = await retryChat.sendMessage(request);
+  const text = result.response.text();
+  node.textContent = text || "目前沒有可顯示的建議，請換個方式詢問。";
+  chat = retryChat;
+  messages.scrollTop = messages.scrollHeight;
+  return text;
+}
+
 async function send(text) {
   const prompt = text.trim();
   if (!prompt || busy) return;
@@ -112,6 +126,10 @@ async function send(text) {
         try {
           return await streamReply(chat, request, pending);
         } catch (error) {
+          if (isStreamParseFailure(error)) {
+            pending.textContent = "串流格式無法解析，改用一般回覆…";
+            return await completeReply(model, request, pending);
+          }
           const status = Number(error?.customData?.httpStatus || error?.status || 0);
           const message = String(error?.message || "");
           const transient = [429, 500, 502, 503, 504].includes(status) || /\[(429|500|502|503|504)\s*\]/.test(message);
@@ -123,9 +141,18 @@ async function send(text) {
             generationConfig: { maxOutputTokens: QUICK_REPLY_CONFIG.maxOutputTokens }
           });
           const fallbackChat = fallback.startChat();
-          const fallbackResult = await streamReply(fallbackChat, request, pending, 30000);
+          let fallbackResult;
+          let usedCompleteFallback = false;
+          try {
+            fallbackResult = await streamReply(fallbackChat, request, pending, 30000);
+          } catch (fallbackError) {
+            if (!isStreamParseFailure(fallbackError)) throw fallbackError;
+            pending.textContent = "備援模型串流格式無法解析，改用一般回覆…";
+            usedCompleteFallback = true;
+            fallbackResult = await completeReply(fallback, request, pending);
+          }
           model = fallback;
-          chat = fallbackChat;
+          if (!usedCompleteFallback) chat = fallbackChat;
           return fallbackResult;
         }
       })(),
