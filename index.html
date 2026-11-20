@@ -48,6 +48,7 @@
 <footer class="app-footer"><span>Taskflow <span class="footer-dot">·</span> 專注每一個下一步</span><span>資料自動儲存於此瀏覽器</span></footer>
 </div></main></div>
 <div class="toast" id="toast" role="status"></div><div class="modal-backdrop" id="authBackdrop"><section class="modal auth-panel" id="authModal" role="dialog" aria-modal="true"></section></div><div class="modal-backdrop" id="modalBackdrop"><section class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></section></div>
+<script>window.taskflowBootstrapErrors=[];window.addEventListener('error',e=>window.taskflowBootstrapErrors.push(String(e.message||e.error||'script error').slice(0,240)));window.addEventListener('unhandledrejection',e=>window.taskflowBootstrapErrors.push(String(e.reason?.message||e.reason||'promise error').slice(0,240)));</script>
 <button class="ai-assistant-fab" id="aiAssistantToggle" type="button" aria-label="開啟 AI 行程助理" aria-expanded="false"><span class="ai-assistant-fab-icon">✦</span><span>AI 行程助理</span></button>
 <section class="ai-assistant-window" id="aiAssistantWindow" aria-label="AI 行程助理" hidden>
   <header class="ai-assistant-header"><div class="ai-assistant-heading"><span class="ai-assistant-mark">✦</span><div><b>AI 行程助理</b><small>依你的任務與行程提供建議</small></div></div><button type="button" class="ai-assistant-close" id="aiAssistantClose" aria-label="收合 AI 行程助理">×</button></header>
