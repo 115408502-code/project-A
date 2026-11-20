@@ -8,9 +8,9 @@ const input = document.querySelector("#aiAssistantInput");
 const messages = document.querySelector("#aiAssistantMessages");
 const sendButton = document.querySelector("#aiAssistantSend");
 let aiApi;
+let aiService;
 let model;
 let chat;
-let firebaseApp;
 let busy = false;
 
 async function waitForSignedInFirebase(timeoutMs = 15000) {
@@ -54,10 +54,9 @@ function getAgendaContext() {
 async function initAI() {
   if (model) return model;
   const { app } = await waitForSignedInFirebase();
-  firebaseApp = app;
   aiApi ||= await import(AI_SDK);
-  const ai = aiApi.getAI(app, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true });
-  model = aiApi.getGenerativeModel(ai, {
+  aiService = aiApi.getAI(app, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true });
+  model = aiApi.getGenerativeModel(aiService, {
     model: PRIMARY_MODEL,
     systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
   });
@@ -79,12 +78,16 @@ async function send(text) {
     const result = await Promise.race([
       (async () => {
         try {
-          return await chat.sendMessage(request);
+          return await Promise.race([
+            chat.sendMessage(request),
+            new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("Primary model timed out"), { code: "taskflow/primary-timeout" })), 15000))
+          ]);
         } catch (error) {
           const status = Number(error?.customData?.httpStatus || error?.status || 0);
           const message = String(error?.message || "");
-          if (![429, 500, 502, 503, 504].includes(status) && !/\[(429|500|502|503|504)\s*\]/.test(message)) throw error;
-          const fallback = aiApi.getGenerativeModel(aiApi.getAI(firebaseApp, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true }), {
+          const transient = [429, 500, 502, 503, 504].includes(status) || /\[(429|500|502|503|504)\s*\]/.test(message);
+          if (!transient && error?.code !== "taskflow/primary-timeout") throw error;
+          const fallback = aiApi.getGenerativeModel(aiService, {
             model: BACKUP_MODEL,
             systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
           });
@@ -95,7 +98,7 @@ async function send(text) {
           return fallbackResult;
         }
       })(),
-      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 30000))
+      new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 50000))
     ]);
     pending.textContent = result.response.text() || "目前沒有可顯示的建議，請換個方式詢問。";
   } catch (error) {
@@ -106,7 +109,7 @@ async function send(text) {
       .replace(/https?:\/\/\S+/g, "[服務端點]")
       .slice(0, 180);
     pending.textContent = code === "taskflow/ai-timeout"
-      ? "AI 回覆逾時，請稍後再試。若持續發生，請管理員完成 Firebase App Check 設定。"
+      ? "AI 服務暫時沒有回覆，主模型與備援模型都逾時了。請稍後再試。"
       : code.includes("app-check") || code.includes("appCheck") || code.includes("app check")
         ? "Firebase App Check 尚未設定完成，AI 請求因此遭到阻擋。"
         : code === "taskflow/auth-not-ready"
