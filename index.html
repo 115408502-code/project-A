@@ -12,6 +12,7 @@
   <nav class="main-nav" aria-label="主要導覽">
     <a href="#overview" class="nav-link active" data-page="overview"><span class="nav-icon">▦</span>總覽</a>
     <a href="#my-tasks" class="nav-link" data-page="my-tasks"><span class="nav-icon">☑</span>我的任務<span class="nav-count" id="navOpenCount">0</span></a>
+    <a href="#schedule" class="nav-link" data-page="schedule"><span class="nav-icon">▦</span>我的行程</a>
     <a href="#upcoming" class="nav-link" data-page="upcoming"><span class="nav-icon">▤</span>即將到期</a>
   </nav>
   <div class="side-section-head"><span>我的專案</span><button class="icon-btn tiny" id="addProjectBtn" aria-label="新增專案" title="新增專案">＋</button></div>
@@ -23,7 +24,7 @@
 <div class="page-wrap">
 <section class="greeting-row"><div><div class="eyebrow" id="currentDate">星期一，10月 30日</div><h1 id="pageHeading">早安，沛欣 <span class="wave">✦</span></h1><p class="subtitle" id="pageSubtitle">今天也為重要的事，留一點專注時間。</p></div><button class="primary-btn" id="newTaskBtn"><span>＋</span> 新增任務</button></section>
 <section class="stats-grid" id="statsGrid"></section>
-<div class="content-grid">
+<div class="content-grid" id="contentGrid">
 <section class="task-panel panel">
   <div class="panel-heading"><div><h2 id="taskPanelTitle">任務清單</h2><p id="taskPanelSub">掌握每個專案的下一步</p></div><button class="more-btn" id="taskMenuBtn" aria-label="更多選項">···</button></div>
   <div class="toolbar"><div class="filter-tabs" id="filterTabs"><button class="filter-tab selected" data-filter="all">全部 <span id="countAll">0</span></button><button class="filter-tab" data-filter="active">未完成 <span id="countActive">0</span></button><button class="filter-tab" data-filter="completed">已完成 <span id="countCompleted">0</span></button></div><div class="toolbar-actions"><button class="toolbar-select" id="priorityFilter">≡ <span>優先級</span> <b>⌄</b></button><button class="toolbar-select" id="sortBtn">↕ <span>排序</span></button><button class="icon-btn view-toggle" title="切換檢視">☷</button></div></div>
@@ -31,10 +32,18 @@
   <div class="panel-footer"><span id="footerCount">顯示 0 項任務</span><button class="text-btn" id="showAllBtn">查看全部任務 <span>→</span></button></div>
 </section>
 <aside class="right-column">
-<section class="calendar-panel panel"><div class="panel-heading compact"><div><h2>行程概覽</h2><p id="calendarMonth">2026 年 10 月</p></div><div class="calendar-arrows"><button id="prevMonth" aria-label="上個月">‹</button><button id="nextMonth" aria-label="下個月">›</button></div></div><div class="calendar-grid" id="calendarGrid"></div><div class="calendar-legend"><span><i class="legend-dot blue"></i>今日</span><span><i class="legend-dot orange"></i>有截止日</span></div></section>
+<section class="calendar-panel panel"><div class="panel-heading compact"><div><h2>行程概覽</h2><p id="calendarMonth">2026 年 10 月</p></div><div class="calendar-arrows"><button id="prevMonth" aria-label="上個月">‹</button><button id="nextMonth" aria-label="下個月">›</button></div></div><div class="calendar-grid" id="calendarGrid"></div><div class="calendar-legend"><span><i class="legend-dot blue"></i>今日</span><span><i class="legend-dot orange"></i>任務</span><span><i class="legend-dot green"></i>行程</span></div></section>
 <section class="focus-panel"><div class="focus-top"><span class="focus-icon">✳</span><span>本週專注</span><button id="focusMore" aria-label="更多">···</button></div><h3>每一步都在前進</h3><p>穩定完成今天的任務，讓專案持續向前。</p><div class="progress-meta"><span>本週完成任務</span><b id="weeklyProgressLabel">0 / 0</b></div><div class="progress-track"><span id="weeklyProgressBar"></span></div><div class="focus-bottom"><span>保持節奏，你做得很好</span><span class="focus-spark">✦</span></div></section>
 <section class="quick-projects"><div class="quick-head"><h3>專案進度</h3><button class="text-btn" id="allProjectsBtn">全部 <span>→</span></button></div><div id="projectProgress"></div></section>
 </aside>
+<section class="schedule-view panel" id="scheduleView" hidden>
+  <div class="schedule-view-heading">
+    <div><h2>行程與待辦</h2><p>安排每日行程，同步查看當天任務</p></div>
+    <div class="schedule-view-actions"><button class="secondary-btn" id="scheduleAddTask">＋ 新增任務</button><button class="primary-btn" id="scheduleAddEvent">＋ 新增行程</button></div>
+  </div>
+  <div class="agenda-datebar"><button class="icon-btn" id="agendaPrevDay" aria-label="前一天">‹</button><button class="agenda-today-btn" id="agendaToday">今天</button><h3 id="agendaDateTitle"></h3><button class="icon-btn" id="agendaNextDay" aria-label="後一天">›</button><span id="agendaCount" class="agenda-count"></span></div>
+  <div class="agenda-list" id="agendaList"></div>
+</section>
 </div>
 <footer class="app-footer"><span>Taskflow <span class="footer-dot">·</span> 專注每一個下一步</span><span>資料自動儲存於此瀏覽器</span></footer>
 </div></main></div>
