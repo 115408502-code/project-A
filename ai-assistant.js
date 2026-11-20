@@ -1,4 +1,6 @@
 const AI_SDK = "https://www.gstatic.com/firebasejs/12.9.0/firebase-ai.js";
+const PRIMARY_MODEL = "gemini-3.8-flash";
+const BACKUP_MODEL = "gemini-3.5-flash-lite";
 const toggle = document.querySelector("#aiAssistantToggle");
 const panel = document.querySelector("#aiAssistantWindow");
 const form = document.querySelector("#aiAssistantForm");
@@ -8,6 +10,7 @@ const sendButton = document.querySelector("#aiAssistantSend");
 let aiApi;
 let model;
 let chat;
+let firebaseApp;
 let busy = false;
 
 async function waitForSignedInFirebase(timeoutMs = 15000) {
@@ -51,10 +54,11 @@ function getAgendaContext() {
 async function initAI() {
   if (model) return model;
   const { app } = await waitForSignedInFirebase();
+  firebaseApp = app;
   aiApi ||= await import(AI_SDK);
   const ai = aiApi.getAI(app, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true });
   model = aiApi.getGenerativeModel(ai, {
-    model: "gemini-4-hydrogen",
+    model: PRIMARY_MODEL,
     systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
   });
   chat = model.startChat();
@@ -71,8 +75,26 @@ async function send(text) {
   const pending = addMessage("正在整理你的任務與行程…");
   try {
     await initAI();
+    const request = `以下是目前工作區未完成任務及未來七天行程（僅用來回答本次規劃，不要假設已變更資料）：\n${getAgendaContext()}\n\n使用者問題：${prompt}`;
     const result = await Promise.race([
-      chat.sendMessage(`以下是目前工作區未完成任務及未來七天行程（僅用來回答本次規劃，不要假設已變更資料）：\n${getAgendaContext()}\n\n使用者問題：${prompt}`),
+      (async () => {
+        try {
+          return await chat.sendMessage(request);
+        } catch (error) {
+          const status = Number(error?.customData?.httpStatus || error?.status || 0);
+          const message = String(error?.message || "");
+          if (![429, 500, 502, 503, 504].includes(status) && !/\[(429|500|502|503|504)\s*\]/.test(message)) throw error;
+          const fallback = aiApi.getGenerativeModel(aiApi.getAI(firebaseApp, { backend: new aiApi.GoogleAIBackend(), useLimitedUseAppCheckTokens: true }), {
+            model: BACKUP_MODEL,
+            systemInstruction: "你是 Taskflow 的繁體中文 AI 行程助理。根據使用者提供的任務與行程提出可執行的時間安排、優先順序和空檔建議。清楚列出日期與時間；資料不足時先說明假設或詢問。不要聲稱已經修改行程或任務，也不要要求或輸出個人敏感資料。"
+          });
+          const fallbackChat = fallback.startChat();
+          const fallbackResult = await fallbackChat.sendMessage(request);
+          model = fallback;
+          chat = fallbackChat;
+          return fallbackResult;
+        }
+      })(),
       new Promise((_, reject) => setTimeout(() => reject(Object.assign(new Error("AI request timed out"), { code: "taskflow/ai-timeout" })), 30000))
     ]);
     pending.textContent = result.response.text() || "目前沒有可顯示的建議，請換個方式詢問。";
