@@ -2,14 +2,15 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebas
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-auth.js";
 
 const CONFIG_KEY = "taskflow-firebase-config-v1";
+const LEGACY_PROJECT_ID = "project-a-ad8a4";
 const DEFAULT_CONFIG = {
-  apiKey: "AIzaSyDZtNaAleeNvDEEF9gjXlyNanqX1y8C-fc",
-  authDomain: "project-a-ad8a4.firebaseapp.com",
-  projectId: "project-a-ad8a4",
-  storageBucket: "project-a-ad8a4.firebasestorage.app",
-  messagingSenderId: "942536359200",
-  appId: "1:942536359200:web:235f08c1cff3d09cf96b45",
-  measurementId: "G-BPR5S2RCKE"
+  apiKey: "AIzaSyA_7UuCMWcOlxcZ2cUKwmm3eywm8Ov88Jc",
+  authDomain: "project-a-59416.firebaseapp.com",
+  projectId: "project-a-59416",
+  storageBucket: "project-a-59416.firebasestorage.app",
+  messagingSenderId: "205844933791",
+  appId: "1:205844933791:web:0b9b7715865bec9e1e86aa",
+  measurementId: "G-K6J6PED4HK"
 };
 const root = document.documentElement;
 let app = null;
@@ -21,7 +22,14 @@ let initializedConfig = "";
 let appCheckNeeded = false;
 
 const readConfig = () => {
-  try { return { ...DEFAULT_CONFIG, ...JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}") }; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONFIG_KEY) || "{}");
+    if (saved.projectId === LEGACY_PROJECT_ID) {
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(DEFAULT_CONFIG));
+      return { ...DEFAULT_CONFIG };
+    }
+    return { ...DEFAULT_CONFIG, ...saved };
+  }
   catch { return { ...DEFAULT_CONFIG }; }
 };
 const isConfigured = (config) => config.apiKey && config.projectId && config.appId &&
